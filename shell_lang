@@ -1,0 +1,127 @@
+<#################################################################
+
+説明：
+    自動化sample
+新規：2018-07-18
+修正：
+##################################################################>
+
+
+# パラメータを取得し、変量に設置する
+function setParam {
+    $input = Read-Host "ホスト名を入力してください"
+    $script:HostName=$input
+    $input = Read-Host "ユーザー名を入力してください"
+    $script:Name=$input
+    $input = Read-Host "パスワードを入力してください"
+    $script:Password=$input
+    $input = Read-Host "
+    再起動:「RESTART」
+    IIS再起動:「NET」
+    上記操作を選んで,入力してください
+    "
+    $script:batName=$input
+}
+
+
+<#
+関数：setOpenContext
+説明：サーバー連携環境設定(OPEN)
+        ●WINRMを起動する
+        ●リモート信頼ホストを設置する
+新規：2018-07-18
+修正：
+#>
+function setOpenContext($script:HostName) {
+    Set-Item WSMan:\localhost\Client\TrustedHosts -Value "$script:HostName"
+}
+
+<#
+関数：setContext
+説明：サーバー連携環境設定(CLOSE)
+        ●リモート信頼ホストをクリア
+        ●WINRMを閉じる
+新規：2018-07-18
+修正：
+#>
+function setCloseContext($script:HostName) {
+    Clear-Item WSMan:\localhost\Client\TrustedHosts
+    Disable-PSremoting
+}
+
+<#
+関数：setConnect
+説明：サーバー連携動作設定
+        ●　パスワードをセキュリティー化
+新規：2018-07-18
+修正：
+#>
+function setConnect($script:Name, $script:Password) {
+    $na = "$script:Name"
+    $p2 = ConvertTo-SecureString "$script:Password" -AsPlainText -Force
+    $Action = New-Object System.Management.Automation.PSCredential($na,$p2)
+    return $Action
+}
+
+<#
+関数：frmRestart
+説明：FRMサーバの再起動処理を呼び出し
+新規：2018-07-18
+修正：
+#>
+function frmRestart($script:HostName, $Action) {
+    Invoke-Command -ComputerName "$script:HostName" -Credential $Action -ScriptBlock {
+        Set-Location C:\Users\nis_user\Desktop\tmp
+        invoke-expression -command C:\Users\user_name\Desktop\tmp\restartService.ps1
+    }
+}
+
+<#
+関数：net2Recycle
+説明：IIS再起動処理を呼び出し
+新規：2018-07-18
+修正：
+#>
+function net2Recycle($script:HostName, $Action) {
+    Invoke-Command -ComputerName "$script:HostName" -Credential $Action -ScriptBlock {
+        Set-Location C:\Users\nis_user\Desktop\tmp
+    invoke-expression -command C:\Users\user_name\Desktop\tmp\NET_RECYCLE.bat
+    }
+}
+
+<#
+関数：global:main
+説明：メイン関数
+新規：2018-07-18
+修正：
+#>
+function global:main() {
+    
+    setParam
+
+    setOpenContext $script:HostName
+
+    $Action = setConnect $script:Name $script:Password
+    
+    if ("RESTART" -match $script:batName) {
+        # 現在実行中のバッチを表示
+        "batName=$script:batName"
+        frmRestart $script:HostName $Action
+    } 
+    elseif ("NET_RECYCLE" -match $script:batName) {
+        # 現在実行中のバッチを表示
+        "batName=$script:batName"
+        net2Recycle $script:HostName $Action
+    }
+    else {
+        setCloseContext
+        return "指定して処理が見つかりません"
+    }
+
+    setCloseContext
+}
+
+# メイン関数を呼び出す
+main
+
+Read-Host

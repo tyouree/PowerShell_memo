@@ -1,0 +1,13 @@
+sudo apt-get install ibus-mozc
+sudo apt-get update
+ibus-daemon -drx
+reboot
+
+//ibus-mozcをインストール
+$sudo apt-get install ibus-mozc
+//更新
+$sudo apt-get update
+//ibus起動
+$ibus-daemon -drx
+//pc再起動
+$reboot

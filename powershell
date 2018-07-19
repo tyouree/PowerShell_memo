@@ -1,0 +1,63 @@
+ここからはサーバー側の操作
+
+
+「PowerShell」を管理者権限で起動する
+
+下記コマンドで状態を確認する
+winrm e winrm/config/listener
+
+起動してない場合、下記コマンドで起動する
+Enable-PSremoting
+
+
+Firewallの設定が必要であれば
+netsh advfirewall firewall set rule  group="リモート管理" new enable=yes
+
+Firewallの状態確認
+netsh firewall show state
+
+
+ここからはクライアント側の操作
+
+
+「PowerShell」を管理者権限で起動する
+
+下記コマンドで状態を確認する
+winrm e winrm/config/listener
+
+起動してない場合、下記コマンドで起動する
+Enable-PSremoting
+
+信頼ホストを設定
+Set-Item WSMan:\localhost\Client\TrustedHosts -Value (ホスト名 または IPアドレス または *)
+
+Set-Item WSMan:\localhost\Client\TrustedHosts -Value XX.XX.XX.XXX
+
+
+信頼ホストを確認
+Get-Item WSMan:\localhost\Client\TrustedHosts
+
+サーバーに遠隔登録(会話開始)
+Enter-PSSession XX.XX.XX.XXX -Credential XX.XX.XX.XXX\user_name
+
+サービスのステータスで並べてリスト表示する
+Get-Service | Sort-Object status
+
+サービスの停止
+Stop-Service –Name <サービス名> –PassThru
+
+Stop-Service –Name FRMServerService –PassThru
+
+サービスの開始
+Start-Service –Name FRMServerService –PassThru
+
+サービスの再起動
+Restart-Service –Name FRMServerService –PassThru
+
+サーバーに遠隔退出(会話終了)
+Exit-PSSession
+
+
+
+netsh firewall set service remoteadmin enable
+
